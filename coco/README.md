@@ -42,7 +42,7 @@ In the CoWork workshop, you **asked questions** and got AI-generated answers. No
 ## Prerequisites
 
 - [ ] Access to Snowsight with CoCo panel enabled (right-side chat)
-- [ ] Role with access to `PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT`
+- [ ] Role with access to `POC TABLE`
 - [ ] CREATE privileges in the workshop schema (provided by facilitator)
 
 ---
@@ -62,7 +62,7 @@ In the CoWork workshop, you **asked questions** and got AI-generated answers. No
 
 ## The Data
 
-You'll work with `PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT` — daily Pendo engagement metrics including:
+You'll work with `POC TABLE` — daily Pendo engagement metrics including:
 
 | Category | Metrics |
 |----------|---------|
