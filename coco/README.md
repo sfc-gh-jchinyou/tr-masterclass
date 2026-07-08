@@ -77,7 +77,7 @@ You'll work with `POC TABLE` — daily Pendo engagement metrics including:
 ## Quick Start
 
 1. Open Snowsight and locate the CoCo panel (right side)
-2. Verify you can query: ask CoCo "Select 1 row from PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT"
+2. Verify you can query: ask CoCo "Select 1 row from POC TABLE"
 3. Start with [Exercise 1](exercises/01_connect_and_discover.md)
 
 ---
@@ -101,7 +101,7 @@ You'll work with `POC TABLE` — daily Pendo engagement metrics including:
 | CoCo panel not visible | Click the Snowflake diamond icon in top-right of Snowsight |
 | "Insufficient privileges" | Ask facilitator to verify role grants |
 | AI functions return errors | Verify `CORTEX_USER` database role is granted |
-| CoCo generates wrong table name | Specify fully-qualified: `PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT` |
+| CoCo generates wrong table name | Specify fully-qualified: `POC TABLE` |
 | Slow AI enrichment | Use `LIMIT 50` for testing, scale up after confirming results |
 
 ---
