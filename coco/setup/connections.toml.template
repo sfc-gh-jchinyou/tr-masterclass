@@ -1,0 +1,13 @@
+# Cortex Code Workshop - Snowflake Connection Configuration
+# Copy this file to: ~/.snowflake/connections.toml
+# Replace placeholders with your actual values
+
+[tr_workshop]
+account = "thomsonreuters-trpoc"
+user = "<your_email@thomsonreuters.com>"
+authenticator = "externalbrowser"
+client_store_temporary_credential = true
+warehouse = "WORKSHOP_WH"
+role = "SNFL_INTL_MASTERCLASS_LEARNER_ROLE"
+database = "MASTERCLASS_DB"
+schema = "COCO_WORKSHOP"
