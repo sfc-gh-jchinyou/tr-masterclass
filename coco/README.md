@@ -89,8 +89,8 @@ You'll work with `MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT` — dai
 | Capability | Where Used |
 |-----------|-----------|
 | Data Discovery | Exercise 1 — explore tables with natural language |
-| Data Engineering | Exercise 2 — build Bronze/Silver pipeline |
-| AI & Agents | Exercise 2 & 3 — AI Functions + Semantic Views |
+| Data Engineering | Exercise 2 — DQ scoring, business rules, Silver pipeline |
+| AI & Agents | Exercise 3 — Semantic Views; Bonus — AI Functions & Cortex Agent |
 | Advanced Analytics | Exercise 3 — Gold aggregations |
 | BI & Apps | Exercise 4 — Streamlit dashboard |
 
