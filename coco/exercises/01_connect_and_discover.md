@@ -21,14 +21,27 @@ If you don't see the CoCo panel:
 
 ---
 
-## Step 2: Discover the Data
+## Step 2: Set Up Your Personal Database
+
+Each participant has their own database for creating tables and views. Confirm yours exists:
+
+```
+USE DATABASE COCO_WORKSHOP_<YOUR_USERNAME>;
+USE SCHEMA PUBLIC;
+```
+
+> Replace `<YOUR_USERNAME>` with your Snowflake username (e.g., `COCO_WORKSHOP_JSMITH`). Your facilitator will confirm the exact name.
+
+---
+
+## Step 3: Discover the Data
 
 Type these prompts into CoCo's chat panel:
 
 ### Prompt 1: What's in the table?
 
 ```
-Describe the table PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT. 
+Describe the table MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT. 
 What columns does it have and what kind of data does it contain?
 ```
 
@@ -38,7 +51,7 @@ What columns does it have and what kind of data does it contain?
 
 ```
 How many unique apps, subscriptions, and BU segments are in 
-PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT? Also show me the 
+MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT? Also show me the 
 distinct values of BU_SEGMENT_C.
 ```
 
@@ -53,7 +66,7 @@ Show me the earliest and latest DATE_RECORDED values.
 
 ---
 
-## Step 3: Ask Analytical Questions
+## Step 4: Ask Analytical Questions
 
 Now let CoCo write more complex queries for you:
 
@@ -62,7 +75,7 @@ Now let CoCo write more complex queries for you:
 ```
 What are the top 10 apps by total visitors in the last 30 days? 
 Show app name, total visitors, and the BU segment they belong to.
-Use VISITORS_TO_APP_LAST_30_DAYS from PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT.
+Use VISITORS_TO_APP_LAST_30_DAYS from MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT.
 ```
 
 ### Prompt 5: Satisfaction overview
@@ -100,4 +113,4 @@ This is the **Data Discovery** capability. CoCo is aware of your Snowflake objec
 
 ---
 
-## Next: [Exercise 2 — AI Enrichment (Bronze → Silver)](02_ai_enrichment.md)
+## Next: [Exercise 2 — Data Quality & Business Rules (Bronze → Silver)](02_data_quality.md)

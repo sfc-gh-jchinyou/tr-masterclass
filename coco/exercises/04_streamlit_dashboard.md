@@ -19,7 +19,7 @@ One prompt. Full app.
 
 ```
 Build me a Streamlit in Snowflake app called "Product Intelligence Dashboard" that 
-connects to the COCO_WORKSHOP schema and shows three pages:
+connects to my database (COCO_WORKSHOP_<YOUR_USERNAME>) and shows three pages:
 
 1. **Adoption Overview** — A bar chart showing average PES score by BU segment from 
    GOLD_BU_ADOPTION. Include metric cards at the top for: total accounts, overall 
@@ -28,7 +28,7 @@ connects to the COCO_WORKSHOP schema and shows three pages:
 2. **Account Health** — A pie chart showing the distribution of risk_classification 
    (Healthy/At-Risk/Churning) from SILVER_ACCOUNT_HEALTH. Below it, a filterable 
    data table of GOLD_AT_RISK_ACCOUNTS with columns: APP_NAME, BU_SEGMENT_C, 
-   PES_SCORE, NPS_SCORE, risk_classification, health_narrative.
+   PES_SCORE, NPS_SCORE, risk_classification, guide_status, engagement_intensity.
 
 3. **NPS & Guides** — A line chart showing NPS trend over time from GOLD_NPS_SUMMARY 
    (x-axis: DATE_RECORDED, y-axis: average NPS, colored by BU segment). Below it, 
@@ -52,7 +52,7 @@ CoCo will present the code. Before deploying:
 ### Deploy:
 
 ```
-Deploy this Streamlit app to Snowflake in the COCO_WORKSHOP schema.
+Deploy this Streamlit app to Snowflake in my database.
 ```
 
 > You'll get a URL to view the live app in Snowsight.
@@ -74,7 +74,7 @@ When a segment is selected, all charts and tables should filter to that segment 
 
 ```
 On the Account Health page, when I click on a row in the at-risk accounts table, 
-show the full health_narrative in an expanded text area below the table.
+show the guide_status and engagement_intensity in an expanded detail area below the table.
 ```
 
 ### Prompt 4: Add a summary metric

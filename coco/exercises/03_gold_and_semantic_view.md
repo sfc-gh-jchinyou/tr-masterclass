@@ -26,7 +26,7 @@ Ask CoCo to build analytics-ready views over the Silver table.
 ### Prompt 1: Adoption by Business Unit
 
 ```
-Create a view called GOLD_BU_ADOPTION in the COCO_WORKSHOP schema that shows 
+Create a view called GOLD_BU_ADOPTION in my database that shows 
 per-BU-segment metrics from SILVER_ACCOUNT_HEALTH:
 - Total accounts
 - Average PES score
@@ -44,7 +44,7 @@ Create a view called GOLD_AT_RISK_ACCOUNTS that shows all accounts from
 SILVER_ACCOUNT_HEALTH where risk_classification is 'At-Risk' or 'Churning'.
 
 Include: APP_NAME, ACCOUNT_ID, BU_SEGMENT_C, PES_SCORE, NPS_SCORE, 
-TOTAL_DAYS_ACTIVE_LAST_30_DAYS, risk_classification, health_narrative.
+TOTAL_DAYS_ACTIVE_LAST_30_DAYS, risk_classification, guide_status, engagement_intensity.
 
 Order by PES_SCORE ascending (worst first).
 ```
@@ -53,7 +53,7 @@ Order by PES_SCORE ascending (worst first).
 
 ```
 Create a view called GOLD_NPS_SUMMARY that aggregates NPS metrics from the source 
-table PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT grouped by BU_SEGMENT_C and 
+table MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT grouped by BU_SEGMENT_C and 
 DATE_RECORDED:
 - Average NPS score
 - Total promoters, detractors, passives

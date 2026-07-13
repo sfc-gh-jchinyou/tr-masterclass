@@ -9,7 +9,7 @@ Exact prompts for live demonstrations. Copy-paste ready.
 Show the end-to-end capability before participants start:
 
 ```
-Describe PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT and show me 3 sample rows.
+Describe MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT and show me 3 sample rows.
 ```
 
 Then immediately:
@@ -26,7 +26,7 @@ NPS score, and days active in the last 30 days.
 
 ### Show data discovery:
 ```
-What tables are in PROD.PRODUCT_USAGE? Describe the columns in ACCOUNT_USAGE_BY_PRODUCT.
+What tables are in MASTERCLASS_DB.COCO_WORKSHOP? Describe the columns in ACCOUNT_USAGE_BY_PRODUCT.
 ```
 
 ### Show analytical query generation:
@@ -45,35 +45,38 @@ average PES score in the last 30 days?
 
 ## Exercise 2 Demos
 
-### Health narrative generation:
+### Dedup and clean:
 ```
-Write a query that uses SNOWFLAKE.CORTEX.COMPLETE with mistral-large2 to generate 
-a 2-sentence health narrative for each of 5 accounts in 
-PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT. Include PES score, NPS, adoption, 
-stickiness, growth, and days active as context. Benchmarks: PES > 60 is healthy, 
-NPS > 30 is strong.
+Write a query that deduplicates MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT to get 
+the most recent record per ACCOUNT_ID and APP_NAME using ROW_NUMBER and QUALIFY. 
+Replace NULLs in PES_SCORE, NPS_SCORE, TOTAL_DAYS_ACTIVE_LAST_30_DAYS with 0. 
+Show 10 rows.
 ```
 
 ### Risk classification:
 ```
-Add a risk classification to the query. Use AI_COMPLETE to classify each account 
-as Healthy, At-Risk, or Churning based on: PES > 60 + NPS > 30 + Active > 15 = Healthy. 
-PES < 30 OR Active < 5 = Churning. Everything else = At-Risk. Return one word only.
+Add a risk_classification column using CASE:
+- 'Churning' if PES_SCORE < 30 OR TOTAL_DAYS_ACTIVE_LAST_30_DAYS < 5
+- 'Healthy' if PES_SCORE > 60 AND NPS_SCORE > 30 AND TOTAL_DAYS_ACTIVE > 15
+- 'At-Risk' otherwise
+Churning takes priority. Show the count per category.
 ```
 
 ### Iterative refinement:
 ```
-The risk classifications have extra text. Update the query to TRIM the output and 
-add a CASE statement that defaults to 'At-Risk' if the model returns anything 
-other than exactly 'Healthy', 'At-Risk', or 'Churning'.
+The Churning threshold feels too aggressive. Change it from PES < 30 to PES < 20 
+and add a condition that NPS < 0 should also trigger Churning.
 ```
 
 ### Full Silver creation:
 ```
-Combine into a CREATE TABLE for SILVER_ACCOUNT_HEALTH in COCO_WORKSHOP schema. 
-Include key columns, health_narrative, risk_classification, guide_effectiveness, 
-and enriched_at. Use the most recent record per account (QUALIFY ROW_NUMBER). 
-Limit to 50 rows.
+Combine into a CREATE TABLE for SILVER_ACCOUNT_HEALTH in my database.
+Read from MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT. Include 
+key dimensions, cleaned metrics, risk_classification, guide_effectiveness_rate 
+(advanced/seen), guide_status (Effective/Ignored/Underperforming/No Data), 
+engagement_intensity (events/visitors), visitor_retention_rate (app visitors / 
+all app visitors), dq_completeness_score (non-null count / 8), dq_freshness_flag 
+(Fresh/Stale/Outdated based on days since DATE_RECORDED), and enriched_at timestamp.
 ```
 
 ---
@@ -82,9 +85,9 @@ Limit to 50 rows.
 
 ### Gold views:
 ```
-Create four Gold views in COCO_WORKSHOP over SILVER_ACCOUNT_HEALTH:
+Create four Gold views in my database over SILVER_ACCOUNT_HEALTH:
 1. GOLD_BU_ADOPTION - avg PES, adoption, stickiness, growth, pct healthy by BU
-2. GOLD_AT_RISK_ACCOUNTS - all At-Risk/Churning accounts with health narrative
+2. GOLD_AT_RISK_ACCOUNTS - all At-Risk/Churning accounts with guide status and engagement scores
 3. GOLD_NPS_SUMMARY - NPS trends by BU and date from the source table
 4. GOLD_GUIDE_ROI - guide seen/advanced/dismissed rates by BU
 ```
@@ -109,11 +112,11 @@ Using PRODUCT_INTELLIGENCE_SV, which business unit has the most at-risk accounts
 ### The big prompt:
 ```
 Build a Streamlit in Snowflake app called "Product Intelligence Dashboard" in 
-COCO_WORKSHOP with three pages:
+my database with three pages:
 1. Adoption Overview - bar chart of avg PES by BU from GOLD_BU_ADOPTION, 
    metric cards for total accounts and avg PES
 2. Account Health - pie chart of risk distribution from SILVER_ACCOUNT_HEALTH, 
-   filterable table of GOLD_AT_RISK_ACCOUNTS with health narratives
+   filterable table of GOLD_AT_RISK_ACCOUNTS with engagement metrics
 3. NPS & Guides - line chart of NPS over time from GOLD_NPS_SUMMARY, 
    bar chart of advancement vs dismissal rate from GOLD_GUIDE_ROI
 Use Snowflake theme with sidebar navigation.
@@ -126,7 +129,7 @@ Add a BU segment dropdown to the sidebar that filters all three pages.
 
 ### Deploy:
 ```
-Deploy this Streamlit app to Snowflake in the COCO_WORKSHOP schema.
+Deploy this Streamlit app to Snowflake in my database.
 ```
 
 ---

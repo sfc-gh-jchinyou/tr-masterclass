@@ -22,7 +22,8 @@
 
 ### Day Before
 - [ ] Run `setup/admin_setup.sql` as ACCOUNTADMIN
-- [ ] Verify source table has data: `SELECT COUNT(*) FROM PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT`
+- [ ] Verify source table has data: `SELECT COUNT(*) FROM MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT`
+- [ ] Confirm each attendee's personal DB exists: `SHOW DATABASES LIKE 'COCO_WORKSHOP_%'`
 - [ ] Test AI function access with the learner role
 - [ ] Confirm CoCo panel is enabled in Snowsight for all participants
 - [ ] Test the full Exercise 2 flow yourself to confirm model responses
@@ -43,12 +44,11 @@
 - **Common issue:** Participants might not see CoCo panel — click the diamond icon top-right
 - **Talking point:** "Notice the data has numbers, but no interpretation. A PES score of 42 — is that good? Bad? That's what we'll solve next."
 
-### Exercise 2: AI Enrichment
-- **Key message:** AI Functions run IN Snowflake. Data never leaves the security perimeter. These models interpret your metrics and generate business-readable intelligence.
-- **Demo opportunity:** Show iterative refinement — "make the narrative more specific" or "use a different classification threshold"
-- **Common issue:** Large result sets can be slow — have participants use `LIMIT 10` for testing, then scale to 50
-- **Model note:** `mistral-large2` is the safest default. If Claude is available via cross-region, it produces better narratives.
-- **Talking point:** "Think about what this means at scale — you just classified hundreds of accounts in seconds, something that would take a human analyst days."
+### Exercise 2: Data Quality & Business Rules
+- **Key message:** CoCo writes complex SQL from business descriptions. You describe the rule, it handles window functions, CASE logic, NULL handling — and it works every time (no model variability).
+- **Demo opportunity:** Show iterative refinement — "change the Churning threshold from 30 to 25" or "add a new DQ check"
+- **Common issue:** Participants may get different CASE ordering — emphasize that priority matters (Churning check before At-Risk)
+- **Talking point:** "Every row gets classified identically, every time. That's the difference between a production pipeline and a demo — deterministic rules you can audit and explain."
 
 ### Exercise 3: Gold + Semantic View
 - **Key message:** This is what powers CoWork. When business users ask questions, the semantic view translates intent to SQL. You're building that translation layer.
@@ -60,7 +60,7 @@
 - **Key message:** One prompt → full app. No context-switching to another tool. Build, deploy, iterate — all in CoCo.
 - **Demo opportunity:** Ask someone to suggest a customization live, then prompt CoCo to implement it
 - **Common issue:** CREATE STREAMLIT permission — verify grants were applied
-- **Talking point:** "You just built an entire analytics application — data pipeline, AI enrichment, semantic layer, and interactive dashboard — without writing a single line of code by hand."
+- **Talking point:** "You just built an entire analytics application — data pipeline, DQ scoring, semantic layer, and interactive dashboard — without writing a single line of code by hand."
 
 ---
 
@@ -70,12 +70,10 @@
 |---------|-------|-----|
 | CoCo panel not visible | Feature not enabled or icon hidden | Click diamond icon top-right; check with admin |
 | "Insufficient privileges" on CREATE | Missing grants on COCO_WORKSHOP | Re-run the GRANT statements from admin_setup.sql |
-| AI function returns NULL | Input too long or model context exceeded | Use `LIMIT 10` or shorten the prompt template |
-| "Model not available" | Model not in allowlist or region | Switch to `mistral-large2` (most widely available) |
-| AI response includes extra text | Model didn't follow "one word only" instruction | Ask CoCo to add TRIM() and handle edge cases |
+| NULLIF returns unexpected results | Division by zero edge case | CoCo should wrap denominators in NULLIF — ask it to fix |
 | Semantic view won't create | Missing CORTEX_USER role | Run: `GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER TO ROLE SNFL_INTL_MASTERCLASS_LEARNER_ROLE` |
 | Streamlit deploy fails | Missing CREATE STREAMLIT grant | Re-run grant from admin_setup.sql |
-| Slow AI enrichment | Processing too many rows | Use LIMIT 50 for workshop; mention production would batch |
+| DQ scores all show 1.0 | No NULLs in sampled data | Normal — mention production data would have gaps |
 
 ---
 
@@ -86,14 +84,16 @@ Use **only** if a participant is blocked and you need to keep the group moving. 
 ### Exercise 2 — Silver Table (reference)
 
 ```sql
-CREATE OR REPLACE TABLE MASTERCLASS_DB.COCO_WORKSHOP.SILVER_ACCOUNT_HEALTH AS
-WITH recent_data AS (
+-- Replace <USERNAME> with the participant's actual username
+USE DATABASE COCO_WORKSHOP_<USERNAME>;
+USE SCHEMA PUBLIC;
+
+CREATE OR REPLACE TABLE SILVER_ACCOUNT_HEALTH AS
+WITH deduped AS (
     SELECT *,
         ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID, APP_NAME ORDER BY DATE_RECORDED DESC) AS rn
-    FROM PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT
-    WHERE DATE_RECORDED >= DATEADD('day', -30, CURRENT_DATE())
+    FROM MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT
     QUALIFY rn = 1
-    LIMIT 50
 )
 SELECT
     APP_NAME,
@@ -101,59 +101,67 @@ SELECT
     SUBSCRIPTION_NAME,
     BU_SEGMENT_C,
     DATE_RECORDED,
-    PES_SCORE,
-    NPS_SCORE,
-    ADOPTION,
-    STICKINESS,
-    GROWTH,
-    VISITORS_TO_APP_LAST_30_DAYS,
-    TOTAL_DAYS_ACTIVE_LAST_30_DAYS,
-    GUIDES_SEEN_LAST_30_DAYS,
-    GUIDES_DISMISSED_LAST_30_DAYS,
-    GUIDES_ADVANCED_LAST_30_DAYS,
-    SNOWFLAKE.CORTEX.COMPLETE(
-        'mistral-large2',
-        CONCAT(
-            'You are a product analytics expert. Write a 2-sentence health summary for this account.\n\n',
-            'App: ', APP_NAME, '\nBU: ', COALESCE(BU_SEGMENT_C, 'Unknown'), '\n',
-            'PES Score: ', COALESCE(PES_SCORE::STRING, 'N/A'),
-            ' (Adoption: ', COALESCE(ADOPTION::STRING, 'N/A'),
-            ', Stickiness: ', COALESCE(STICKINESS::STRING, 'N/A'),
-            ', Growth: ', COALESCE(GROWTH::STRING, 'N/A'), ')\n',
-            'Visitors (30d): ', COALESCE(VISITORS_TO_APP_LAST_30_DAYS::STRING, 'N/A'), '\n',
-            'Days Active (30d): ', COALESCE(TOTAL_DAYS_ACTIVE_LAST_30_DAYS::STRING, 'N/A'), '\n',
-            'NPS Score: ', COALESCE(NPS_SCORE::STRING, 'N/A'), '\n\n',
-            'Healthy benchmarks: PES > 60, NPS > 30, Active days > 15.\n',
-            'Summary:'
-        )
-    ) AS health_narrative,
-    SNOWFLAKE.CORTEX.COMPLETE(
-        'mistral-large2',
-        CONCAT(
-            'Classify this account as exactly one of: Healthy, At-Risk, Churning.\n',
-            'PES: ', COALESCE(PES_SCORE::STRING, '0'),
-            ', NPS: ', COALESCE(NPS_SCORE::STRING, '0'),
-            ', Days Active: ', COALESCE(TOTAL_DAYS_ACTIVE_LAST_30_DAYS::STRING, '0'),
-            ', Guides Dismissed: ', COALESCE(GUIDES_DISMISSED_LAST_30_DAYS::STRING, '0'),
-            '\nRules: Healthy=PES>60+NPS>30+Active>15. Churning=PES<30 OR Active<5. At-Risk=everything else.\n',
-            'Answer (one word only):'
-        )
-    ) AS risk_classification,
+    -- Cleaned metrics (NULL → 0)
+    COALESCE(PES_SCORE, 0) AS PES_SCORE,
+    COALESCE(NPS_SCORE, 0) AS NPS_SCORE,
+    COALESCE(ADOPTION, 0) AS ADOPTION,
+    COALESCE(STICKINESS, 0) AS STICKINESS,
+    COALESCE(GROWTH, 0) AS GROWTH,
+    COALESCE(VISITORS_TO_APP_LAST_30_DAYS, 0) AS VISITORS_TO_APP_LAST_30_DAYS,
+    COALESCE(TOTAL_DAYS_ACTIVE_LAST_30_DAYS, 0) AS TOTAL_DAYS_ACTIVE_LAST_30_DAYS,
+    COALESCE(GUIDES_SEEN_LAST_30_DAYS, 0) AS GUIDES_SEEN_LAST_30_DAYS,
+    COALESCE(GUIDES_ADVANCED_LAST_30_DAYS, 0) AS GUIDES_ADVANCED_LAST_30_DAYS,
+    COALESCE(GUIDES_DISMISSED_LAST_30_DAYS, 0) AS GUIDES_DISMISSED_LAST_30_DAYS,
+    COALESCE(GUIDES_SNOOZED_LAST_30_DAYS, 0) AS GUIDES_SNOOZED_LAST_30_DAYS,
+    -- Risk classification (business rules)
+    CASE
+        WHEN COALESCE(PES_SCORE, 0) < 30 OR COALESCE(TOTAL_DAYS_ACTIVE_LAST_30_DAYS, 0) < 5
+            THEN 'Churning'
+        WHEN COALESCE(PES_SCORE, 0) > 60
+            AND COALESCE(NPS_SCORE, 0) > 30
+            AND COALESCE(TOTAL_DAYS_ACTIVE_LAST_30_DAYS, 0) > 15
+            THEN 'Healthy'
+        ELSE 'At-Risk'
+    END AS risk_classification,
+    -- Guide effectiveness
+    GUIDES_ADVANCED_LAST_30_DAYS::FLOAT / NULLIF(GUIDES_SEEN_LAST_30_DAYS, 0)
+        AS guide_effectiveness_rate,
     CASE
         WHEN COALESCE(GUIDES_SEEN_LAST_30_DAYS, 0) = 0 THEN 'No Data'
         WHEN GUIDES_ADVANCED_LAST_30_DAYS::FLOAT / NULLIF(GUIDES_SEEN_LAST_30_DAYS, 0) > 0.5 THEN 'Effective'
         WHEN GUIDES_DISMISSED_LAST_30_DAYS::FLOAT / NULLIF(GUIDES_SEEN_LAST_30_DAYS, 0) > 0.5 THEN 'Ignored'
         ELSE 'Underperforming'
-    END AS guide_effectiveness,
+    END AS guide_status,
+    -- Engagement metrics
+    TOTAL_EVENTS_LAST_30_DAYS::FLOAT / NULLIF(VISITORS_TO_APP_LAST_30_DAYS, 0)
+        AS engagement_intensity,
+    VISITORS_TO_APP_LAST_30_DAYS::FLOAT / NULLIF(VISITORS_TO_ALL_APPS_OF_ACCOUNT_LAST_30_DAYS, 0)
+        AS visitor_retention_rate,
+    -- Data quality
+    (IFF(PES_SCORE IS NOT NULL, 1, 0) + IFF(NPS_SCORE IS NOT NULL, 1, 0)
+     + IFF(ADOPTION IS NOT NULL, 1, 0) + IFF(STICKINESS IS NOT NULL, 1, 0)
+     + IFF(GROWTH IS NOT NULL, 1, 0) + IFF(VISITORS_TO_APP_LAST_30_DAYS IS NOT NULL, 1, 0)
+     + IFF(TOTAL_DAYS_ACTIVE_LAST_30_DAYS IS NOT NULL, 1, 0)
+     + IFF(TOTAL_EVENTS_LAST_30_DAYS IS NOT NULL, 1, 0)) / 8.0
+        AS dq_completeness_score,
+    CASE
+        WHEN DATEDIFF('day', DATE_RECORDED, CURRENT_DATE()) <= 7 THEN 'Fresh'
+        WHEN DATEDIFF('day', DATE_RECORDED, CURRENT_DATE()) <= 30 THEN 'Stale'
+        ELSE 'Outdated'
+    END AS dq_freshness_flag,
+    CASE
+        WHEN PES_SCORE BETWEEN 0 AND 100 AND DATE_RECORDED IS NOT NULL THEN 'Valid'
+        ELSE 'Invalid'
+    END AS dq_validity_flag,
     CURRENT_TIMESTAMP() AS enriched_at
-FROM recent_data;
+FROM deduped;
 ```
 
 ### Exercise 3 — Gold Views (reference)
 
 ```sql
--- BU Adoption
-CREATE OR REPLACE VIEW MASTERCLASS_DB.COCO_WORKSHOP.GOLD_BU_ADOPTION AS
+-- BU Adoption (in participant's personal DB)
+CREATE OR REPLACE VIEW GOLD_BU_ADOPTION AS
 SELECT
     BU_SEGMENT_C,
     COUNT(*) AS total_accounts,
@@ -163,20 +171,21 @@ SELECT
     AVG(GROWTH) AS avg_growth,
     SUM(VISITORS_TO_APP_LAST_30_DAYS) AS total_visitors_30d,
     ROUND(SUM(CASE WHEN risk_classification = 'Healthy' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS pct_healthy
-FROM MASTERCLASS_DB.COCO_WORKSHOP.SILVER_ACCOUNT_HEALTH
+FROM SILVER_ACCOUNT_HEALTH
 GROUP BY BU_SEGMENT_C
 ORDER BY avg_pes DESC;
 
 -- At-Risk Accounts
-CREATE OR REPLACE VIEW MASTERCLASS_DB.COCO_WORKSHOP.GOLD_AT_RISK_ACCOUNTS AS
+CREATE OR REPLACE VIEW GOLD_AT_RISK_ACCOUNTS AS
 SELECT APP_NAME, ACCOUNT_ID, BU_SEGMENT_C, PES_SCORE, NPS_SCORE,
-       TOTAL_DAYS_ACTIVE_LAST_30_DAYS, risk_classification, health_narrative
-FROM MASTERCLASS_DB.COCO_WORKSHOP.SILVER_ACCOUNT_HEALTH
+       TOTAL_DAYS_ACTIVE_LAST_30_DAYS, risk_classification, guide_status,
+       engagement_intensity, dq_completeness_score
+FROM SILVER_ACCOUNT_HEALTH
 WHERE TRIM(risk_classification) IN ('At-Risk', 'Churning')
 ORDER BY PES_SCORE ASC;
 
--- NPS Summary
-CREATE OR REPLACE VIEW MASTERCLASS_DB.COCO_WORKSHOP.GOLD_NPS_SUMMARY AS
+-- NPS Summary (reads from shared source)
+CREATE OR REPLACE VIEW GOLD_NPS_SUMMARY AS
 SELECT
     BU_SEGMENT_C,
     DATE_RECORDED,
@@ -185,12 +194,12 @@ SELECT
     SUM(NPS_NUMBER_OF_DETRACTERS) AS total_detractors,
     SUM(NPS_NUMBER_OF_PASSIVES) AS total_passives,
     AVG(PES_SCORE) AS avg_pes
-FROM PROD.PRODUCT_USAGE.ACCOUNT_USAGE_BY_PRODUCT
+FROM MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT
 WHERE NPS_NUMBER_OF_RESPONSES > 0
 GROUP BY BU_SEGMENT_C, DATE_RECORDED;
 
 -- Guide ROI
-CREATE OR REPLACE VIEW MASTERCLASS_DB.COCO_WORKSHOP.GOLD_GUIDE_ROI AS
+CREATE OR REPLACE VIEW GOLD_GUIDE_ROI AS
 SELECT
     BU_SEGMENT_C,
     SUM(GUIDES_SEEN_LAST_30_DAYS) AS total_seen,
@@ -199,9 +208,9 @@ SELECT
     SUM(GUIDES_SNOOZED_LAST_30_DAYS) AS total_snoozed,
     ROUND(SUM(GUIDES_ADVANCED_LAST_30_DAYS)::FLOAT / NULLIF(SUM(GUIDES_SEEN_LAST_30_DAYS), 0), 3) AS advancement_rate,
     ROUND(SUM(GUIDES_DISMISSED_LAST_30_DAYS)::FLOAT / NULLIF(SUM(GUIDES_SEEN_LAST_30_DAYS), 0), 3) AS dismissal_rate,
-    SUM(CASE WHEN guide_effectiveness = 'Effective' THEN 1 ELSE 0 END) AS effective_count,
-    SUM(CASE WHEN guide_effectiveness = 'Ignored' THEN 1 ELSE 0 END) AS ignored_count
-FROM MASTERCLASS_DB.COCO_WORKSHOP.SILVER_ACCOUNT_HEALTH
+    SUM(CASE WHEN guide_status = 'Effective' THEN 1 ELSE 0 END) AS effective_count,
+    SUM(CASE WHEN guide_status = 'Ignored' THEN 1 ELSE 0 END) AS ignored_count
+FROM SILVER_ACCOUNT_HEALTH
 GROUP BY BU_SEGMENT_C;
 ```
 
