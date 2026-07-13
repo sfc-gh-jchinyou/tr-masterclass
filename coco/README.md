@@ -2,7 +2,7 @@
 
 **Thomson Reuters | July 2026**
 
-Transform raw product engagement data into an AI-powered analytics platform — using nothing but natural language prompts in Cortex Code.
+Transform raw product engagement data into a governed analytics platform — using nothing but natural language prompts in Cortex Code.
 
 ---
 
@@ -101,10 +101,10 @@ You'll work with `MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT` — dai
 | Issue | Fix |
 |-------|-----|
 | CoCo panel not visible | Click the Snowflake diamond icon in top-right of Snowsight |
-| "Insufficient privileges" | Ask facilitator to verify role grants |
-| AI functions return errors | Verify `CORTEX_USER` database role is granted |
-| CoCo generates wrong table name | Specify fully-qualified: `MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT` |
-| Slow AI enrichment | Use `LIMIT 50` for testing, scale up after confirming results |
+| "Insufficient privileges" | Ask facilitator to verify role grants on your personal DB |
+| Can't read source table | Confirm SELECT grant on `MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT` |
+| CoCo generates wrong table name | Specify fully-qualified path including database and schema |
+| Semantic View creation fails | Verify `CORTEX_USER` database role is granted to your role |
 
 ---
 
@@ -115,6 +115,7 @@ TR_Coco_Workshop/
 ├── README.md                              ← You are here
 ├── setup/
 │   ├── admin_setup.sql                    ← Admin: run before workshop
+│   ├── seed_data.sql                      ← Admin: generates synthetic source data
 │   └── connections.toml.template          ← Connection template (if using Desktop)
 ├── exercises/
 │   ├── 01_connect_and_discover.md         ← Exercise 1
