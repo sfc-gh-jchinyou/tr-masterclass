@@ -38,30 +38,37 @@ USE SCHEMA PUBLIC;
 
 Type these prompts into CoCo's chat panel:
 
-### Prompt 1: What's in the table?
+### Prompt 1: What data do I have access to?
 
 ```
-Describe the table MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT. 
-What columns does it have and what kind of data does it contain?
+What databases and schemas can I access? Are there any tables related to 
+product usage or account engagement?
+```
+
+> CoCo will search your available objects and surface the ACCOUNT_USAGE_BY_PRODUCT table. This is how discovery works — you don't need to know the path upfront.
+
+### Prompt 2: Tell me about that table
+
+```
+Describe that account usage table. What columns does it have and what kind 
+of data is in it?
 ```
 
 > CoCo will show you the column list. Notice the four metric categories: daily engagement, 30-day rollups, guide interactions, and satisfaction scores (NPS/PNPS/PES).
 
-### Prompt 2: Understand the dimensions
+### Prompt 3: Understand the dimensions
 
 ```
-How many unique apps, subscriptions, and BU segments are in 
-MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT? Also show me the 
-distinct values of BU_SEGMENT_C.
+How many unique apps, subscriptions, and BU segments are in that table? 
+Show me the distinct BU segment values.
 ```
 
 > This reveals the segmentation structure — you'll see Thomson Reuters business units.
 
-### Prompt 3: Time range
+### Prompt 4: Time range
 
 ```
-What's the date range of data in ACCOUNT_USAGE_BY_PRODUCT? 
-Show me the earliest and latest DATE_RECORDED values.
+What's the date range of data? Show me the earliest and latest recorded dates.
 ```
 
 ---
@@ -70,25 +77,24 @@ Show me the earliest and latest DATE_RECORDED values.
 
 Now let CoCo write more complex queries for you:
 
-### Prompt 4: Most active apps
+### Prompt 5: Most active apps
 
 ```
 What are the top 10 apps by total visitors in the last 30 days? 
-Show app name, total visitors, and the BU segment they belong to.
-Use VISITORS_TO_APP_LAST_30_DAYS from MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT.
+Show the app name, total visitors, and which BU segment they belong to.
 ```
 
-### Prompt 5: Satisfaction overview
+### Prompt 6: Satisfaction overview
 
 ```
 What's the average NPS score and PES score across all accounts? 
-Break it down by BU_SEGMENT_C. Which segment has the highest and lowest scores?
+Break it down by business unit. Which segment scores highest and lowest?
 ```
 
-### Prompt 6: Engagement health check
+### Prompt 7: Engagement health check
 
 ```
-How many accounts have fewer than 5 total days active in the last 30 days? 
+How many accounts have fewer than 5 active days in the last 30 days? 
 What percentage of all accounts is that?
 ```
 
@@ -109,7 +115,7 @@ This is the **Data Discovery** capability. CoCo is aware of your Snowflake objec
 
 > The raw table has **metrics** (engagement counts, scores, time spent) but lacks **interpretation**: Which accounts are healthy? Which are at risk? What does a PES score of 45 actually *mean* in business terms?
 >
-> In the next exercise, you'll use AI functions to generate that interpretation automatically.
+> In the next exercise, you'll build business rules and DQ scoring to add that interpretation.
 
 ---
 
