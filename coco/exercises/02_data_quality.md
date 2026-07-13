@@ -11,6 +11,24 @@ Use CoCo to write SQL that transforms raw product usage data into a clean, score
 
 ---
 
+## Setup: Create Your Silver Layer Worksheet
+
+Before starting, open a SQL worksheet to build your Silver pipeline:
+
+1. In Snowsight, click **+ → SQL Worksheet**
+2. Rename it to **"Silver Layer"** (click the title at the top)
+3. Set the context at the top of the worksheet:
+   ```sql
+   USE DATABASE COCO_WORKSHOP_<YOUR_USERNAME>;
+   USE SCHEMA PUBLIC;
+   USE WAREHOUSE WORKSHOP_WH;
+   ```
+4. Run those three lines to set your session context
+
+You'll use CoCo (right panel) to **generate** the SQL, then paste each step into this worksheet to **run** it. This gives you a persistent record of your Silver pipeline.
+
+---
+
 ## The Problem
 
 The Bronze table has raw metrics, but they're noisy:
@@ -34,13 +52,15 @@ Ask CoCo to handle the most recent record per account and clean NULLs.
 ### Prompt 1:
 
 ```
-Write a SQL query that deduplicates MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT 
-to get the most recent record per ACCOUNT_ID and APP_NAME (based on DATE_RECORDED).
+Write a SQL query that deduplicates the account usage table to get the most 
+recent record per ACCOUNT_ID and APP_NAME based on DATE_RECORDED.
 Use ROW_NUMBER with QUALIFY. Also replace NULL values in PES_SCORE, NPS_SCORE, 
 and TOTAL_DAYS_ACTIVE_LAST_30_DAYS with 0. Show me 10 rows.
 ```
 
 > **What to expect:** CoCo generates a CTE with `ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID, APP_NAME ORDER BY DATE_RECORDED DESC) = 1` and COALESCE for NULL handling.
+>
+> **Copy the generated SQL into your "Silver Layer" worksheet and run it** to verify it works.
 
 ---
 
@@ -128,8 +148,8 @@ Bring it all together.
 
 ```
 Combine everything into a CREATE TABLE AS SELECT that creates 
-SILVER_ACCOUNT_HEALTH in my database (COCO_WORKSHOP_<YOUR_USERNAME>.PUBLIC).
-Read from MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT. Include:
+SILVER_ACCOUNT_HEALTH in my database. Read from the shared account usage table.
+Include:
 - Key dimensions: APP_NAME, ACCOUNT_ID, SUBSCRIPTION_NAME, BU_SEGMENT_C, DATE_RECORDED
 - Raw metrics: PES_SCORE, NPS_SCORE, ADOPTION, STICKINESS, GROWTH, 
   VISITORS_TO_APP_LAST_30_DAYS, TOTAL_DAYS_ACTIVE_LAST_30_DAYS
@@ -140,7 +160,9 @@ Read from MASTERCLASS_DB.COCO_WORKSHOP.ACCOUNT_USAGE_BY_PRODUCT. Include:
 - Metadata: CURRENT_TIMESTAMP() as enriched_at
 ```
 
-Run it, then verify:
+**Copy the final CREATE TABLE statement into your "Silver Layer" worksheet and run it.** This is the full pipeline — it reads from the shared source and writes to your personal database.
+
+Then verify in CoCo:
 
 ```
 How many rows are in SILVER_ACCOUNT_HEALTH? Show me the distribution of 
