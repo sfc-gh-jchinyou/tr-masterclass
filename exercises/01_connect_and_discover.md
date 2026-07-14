@@ -31,6 +31,7 @@ USE SCHEMA PUBLIC;
 ```
 
 > Replace `<YOUR_USERNAME>` with your Snowflake username (e.g., `COCO_WORKSHOP_JSMITH`). Your facilitator will confirm the exact name.
+> Hint: Try the "Fix Now" button
 
 ---
 
