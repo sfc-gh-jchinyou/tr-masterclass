@@ -15,13 +15,13 @@ Use CoCo to write SQL that transforms raw product usage data into a clean, score
 
 Before starting, open a SQL worksheet to build your Silver pipeline:
 
-1. In Snowsight, click **+ → SQL Worksheet**
+1. In your Workspace, create a new SQL File:  **"+ Add New" → SQL File**
 2. Rename it to **"Silver Layer"** (click the title at the top)
 3. Set the context at the top of the worksheet:
    ```sql
    USE DATABASE COCO_WORKSHOP_<YOUR_USERNAME>;
    USE SCHEMA PUBLIC;
-   USE WAREHOUSE WORKSHOP_WH;
+   USE WAREHOUSE SNFL_INTL_MASTERCLASS_WH;
    ```
 4. Run those three lines to set your session context
 

@@ -25,12 +25,18 @@ If you don't see the CoCo panel:
 
 Each participant has their own database for creating tables and views. Confirm yours exists:
 
+> Create a new Workspace called "COCO_Workshop": **Projects → Workspaces → "+"**
+> Add a new Worksheet to the Workspace: **"+ Add New" → "SQL File"**
+
+
 ```
 USE DATABASE COCO_WORKSHOP_<YOUR_USERNAME>;
 USE SCHEMA PUBLIC;
 ```
 
+
 > Replace `<YOUR_USERNAME>` with your Snowflake username (e.g., `COCO_WORKSHOP_JSMITH`). Your facilitator will confirm the exact name.
+
 > Hint: Try the "Fix Now" button
 
 ---
